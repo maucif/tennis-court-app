@@ -82,7 +82,7 @@ create table public.reservations (
   -- Cancelled reservations don't block the slot.
   exclude using gist (
     court_id with =,
-    tsrange(start_time, end_time) with &&
+    tstzrange(start_time, end_time) with &&
   ) where (status <> 'cancelled')
 );
 
