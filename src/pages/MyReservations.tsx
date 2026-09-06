@@ -9,6 +9,7 @@ interface Row extends Reservation {
 }
 
 const CONFIRM_WINDOW_MS = 60 * 60 * 1000
+const CHECKIN_EARLY_MS = 15 * 60 * 1000
 
 function formatDate(d: Date): string {
   return d.toLocaleDateString(undefined, {
@@ -47,6 +48,7 @@ export default function MyReservations() {
   const [error, setError] = useState<string | null>(null)
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [now, setNow] = useState(Date.now())
+  const [codeInputs, setCodeInputs] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
     if (!user) return
@@ -93,11 +95,35 @@ export default function MyReservations() {
     else await load()
   }
 
+  async function handleCheckin(id: string) {
+    setPendingId(id)
+    setError(null)
+    const { error } = await supabase.rpc('validate_checkin', {
+      p_reservation_id: id,
+      p_code: codeInputs[id] ?? '',
+    })
+    setPendingId(null)
+    if (error) setError(error.message)
+    else {
+      setCodeInputs((prev) => ({ ...prev, [id]: '' }))
+      await load()
+    }
+  }
+
   const upcoming = rows
-    .filter((r) => r.status !== 'cancelled' && new Date(r.end_time).getTime() > now)
+    .filter(
+      (r) =>
+        (r.status === 'booked' || r.status === 'confirmed') &&
+        new Date(r.end_time).getTime() > now,
+    )
     .sort((a, b) => a.start_time.localeCompare(b.start_time))
-  const history = rows
-    .filter((r) => r.status === 'cancelled' || new Date(r.end_time).getTime() <= now)
+  const history = rows.filter(
+    (r) =>
+      r.status === 'cancelled' ||
+      r.status === 'completed' ||
+      r.status === 'no_show' ||
+      new Date(r.end_time).getTime() <= now,
+  )
 
   return (
     <div>
@@ -133,6 +159,10 @@ export default function MyReservations() {
                   const canCancel =
                     (r.status === 'booked' || r.status === 'confirmed') &&
                     msUntilStart > 0
+                  const canCheckin =
+                    (r.status === 'booked' || r.status === 'confirmed') &&
+                    msUntilStart <= CHECKIN_EARLY_MS &&
+                    now <= new Date(r.end_time).getTime()
                   const isPending = pendingId === r.id
 
                   return (
@@ -147,7 +177,7 @@ export default function MyReservations() {
                         </div>
                         <div className="mt-1">{statusBadge(r.status)}</div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {r.status === 'booked' && !canConfirm && (
                           <span className="text-xs text-slate-500">
                             Confirm opens 1hr before
@@ -162,10 +192,28 @@ export default function MyReservations() {
                             {isPending ? '…' : 'Confirm'}
                           </button>
                         )}
-                        {r.status === 'confirmed' && msUntilStart <= 0 && (
-                          <span className="text-xs text-slate-500">
-                            On-site check-in coming soon
-                          </span>
+                        {canCheckin && (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              placeholder="Code"
+                              value={codeInputs[r.id] ?? ''}
+                              onChange={(e) =>
+                                setCodeInputs((prev) => ({
+                                  ...prev,
+                                  [r.id]: e.target.value,
+                                }))
+                              }
+                              className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-xs uppercase tracking-widest focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            />
+                            <button
+                              disabled={isPending || !codeInputs[r.id]}
+                              onClick={() => handleCheckin(r.id)}
+                              className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                            >
+                              {isPending ? '…' : 'Check in'}
+                            </button>
+                          </div>
                         )}
                         {canCancel && (
                           <button
