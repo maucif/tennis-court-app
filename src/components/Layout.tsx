@@ -1,12 +1,15 @@
 import { NavLink, Outlet } from 'react-router-dom'
-
-const navItems = [
-  { to: '/', label: 'Book a Court' },
-  { to: '/my-reservations', label: 'My Reservations' },
-  { to: '/admin', label: 'Admin' },
-]
+import { useAuth } from '../context/AuthContext'
 
 export default function Layout() {
+  const { profile, user, signOut } = useAuth()
+
+  const navItems = [
+    { to: '/', label: 'Book a Court' },
+    { to: '/my-reservations', label: 'My Reservations' },
+    ...(profile?.role === 'admin' ? [{ to: '/admin', label: 'Admin' }] : []),
+  ]
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
@@ -14,7 +17,7 @@ export default function Layout() {
           <span className="text-lg font-semibold text-emerald-700">
             🎾 Court Reserve
           </span>
-          <nav className="flex gap-4 text-sm font-medium">
+          <nav className="flex items-center gap-4 text-sm font-medium">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -29,6 +32,19 @@ export default function Layout() {
                 {item.label}
               </NavLink>
             ))}
+            {user && (
+              <span className="ml-2 flex items-center gap-3 border-l border-slate-200 pl-4">
+                <span className="text-slate-400">
+                  {profile?.full_name || user.email}
+                </span>
+                <button
+                  onClick={() => signOut()}
+                  className="text-slate-500 hover:text-slate-900"
+                >
+                  Sign out
+                </button>
+              </span>
+            )}
           </nav>
         </div>
       </header>
