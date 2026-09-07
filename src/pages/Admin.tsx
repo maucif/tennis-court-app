@@ -6,6 +6,17 @@ export default function Admin() {
   const [code, setCode] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [sendingReminders, setSendingReminders] = useState(false)
+  const [reminderResult, setReminderResult] = useState<string | null>(null)
+
+  async function sendRemindersNow() {
+    setSendingReminders(true)
+    setReminderResult(null)
+    const { data, error } = await supabase.rpc('send_reservation_reminders')
+    setSendingReminders(false)
+    if (error) setReminderResult(`Error: ${error.message}`)
+    else setReminderResult(`Sent ${data} reminder${data === 1 ? '' : 's'}.`)
+  }
 
   useEffect(() => {
     supabase
@@ -42,6 +53,26 @@ export default function Admin() {
           A new code is created automatically the first time this page is
           opened each day.
         </p>
+      </section>
+
+      <section className="mt-8 max-w-sm rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Reminder emails
+        </h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Runs automatically every 5 minutes for reservations starting within
+          the hour. This button is just for testing without waiting.
+        </p>
+        <button
+          onClick={sendRemindersNow}
+          disabled={sendingReminders}
+          className="mt-3 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+        >
+          {sendingReminders ? 'Sending…' : 'Send reminders now'}
+        </button>
+        {reminderResult && (
+          <p className="mt-2 text-xs text-slate-600">{reminderResult}</p>
+        )}
       </section>
 
       <NoShowFeesPanel />
