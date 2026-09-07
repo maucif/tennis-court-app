@@ -10,6 +10,6 @@ export interface NoShowFeeRow {
   reservations: {
     start_time: string
     end_time: string
-    courts: { number: number } | null
+    courts: { number: number; name: string } | null
   } | null
 }

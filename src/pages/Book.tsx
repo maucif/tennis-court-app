@@ -173,7 +173,7 @@ export default function Book() {
                     key={c.id}
                     className="text-center text-xs font-medium text-slate-500"
                   >
-                    Court {c.number}
+                    {c.name}
                   </th>
                 ))}
               </tr>

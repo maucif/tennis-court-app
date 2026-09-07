@@ -4,7 +4,7 @@ import type { Reservation, ReservationStatus } from '../types/court'
 import { dayRangeUtc, formatTime, todayIsoDate } from '../lib/scheduling'
 
 interface Row extends Reservation {
-  courts: { number: number } | null
+  courts: { number: number; name: string } | null
   profiles: { full_name: string | null; email: string | null } | null
 }
 
@@ -35,7 +35,7 @@ export default function ReservationsOverridePanel() {
     const { start, end } = dayRangeUtc(date)
     const { data, error } = await supabase
       .from('reservations')
-      .select('*, courts(number), profiles!reservations_member_id_fkey(full_name, email)')
+      .select('*, courts(number, name), profiles!reservations_member_id_fkey(full_name, email)')
       .gte('start_time', start)
       .lt('start_time', end)
       .order('start_time')
@@ -116,7 +116,7 @@ export default function ReservationsOverridePanel() {
               >
                 <div>
                   <div className="font-medium text-slate-900">
-                    Court {r.courts?.number} — {formatTime(new Date(r.start_time))}
+                    {r.courts?.name} — {formatTime(new Date(r.start_time))}
                   </div>
                   <div className="text-slate-500">
                     {r.profiles?.full_name || r.profiles?.email || '—'}

@@ -172,7 +172,7 @@ export default function MyReservations() {
                     >
                       <div>
                         <div className="font-medium text-slate-900">
-                          Court {r.courts?.number} — {formatDate(start)} at{' '}
+                          {r.courts?.name} — {formatDate(start)} at{' '}
                           {formatTime(start)}
                         </div>
                         <div className="mt-1">{statusBadge(r.status)}</div>

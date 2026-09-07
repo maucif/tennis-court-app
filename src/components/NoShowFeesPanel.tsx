@@ -16,7 +16,7 @@ function downloadCsv(rows: NoShowFeeRow[]) {
     return [
       r.profiles?.full_name ?? '',
       r.profiles?.email ?? '',
-      r.reservations?.courts ? `Court ${r.reservations.courts.number}` : '',
+      r.reservations?.courts?.name ?? '',
       start ? start.toLocaleDateString() : '',
       start ? start.toLocaleTimeString() : '',
       r.status,
@@ -49,7 +49,7 @@ export default function NoShowFeesPanel() {
       .select(
         `id, status, note, created_at, resolved_at,
          profiles!no_show_fees_member_id_fkey (full_name, email),
-         reservations (start_time, end_time, courts (number))`,
+         reservations (start_time, end_time, courts (number, name))`,
       )
       .order('created_at', { ascending: false })
     if (error) setError(error.message)
@@ -146,9 +146,7 @@ export default function NoShowFeesPanel() {
                       </div>
                     </td>
                     <td className="px-2 py-2 text-slate-600">
-                      {r.reservations?.courts
-                        ? `Court ${r.reservations.courts.number}`
-                        : '—'}
+                      {r.reservations?.courts?.name ?? '—'}
                     </td>
                     <td className="px-2 py-2 text-slate-600">
                       {start
