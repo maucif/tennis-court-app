@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import NoShowFeesPanel from '../components/NoShowFeesPanel'
 
 export default function Admin() {
   const [code, setCode] = useState<string | null>(null)
@@ -43,9 +44,10 @@ export default function Admin() {
         </p>
       </section>
 
-      <p className="mt-6 text-sm text-slate-500">
-        Court/member management and the no-show fee list will go here (Steps
-        7–9).
+      <NoShowFeesPanel />
+
+      <p className="mt-8 text-sm text-slate-500">
+        Court/member management will go here (Step 9).
       </p>
     </div>
   )
