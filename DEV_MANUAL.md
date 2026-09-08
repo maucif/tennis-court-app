@@ -93,6 +93,15 @@ when unchecked (they get a "deactivated" screen and can't reach any page).
 - **Club hours**: hardcoded as a constant in `src/lib/scheduling.ts`
   (`OPEN_HOUR`/`CLOSE_HOUR`, currently 7am–9pm, 1-hour slots). Change those
   two numbers and redeploy if the club's actual hours differ.
+- **Club timezone (daily code rollover)**: the daily check-in code's "day"
+  is defined by the Postgres function `public.club_today()`
+  (`supabase/migrations/0009_fix_daily_code_timezone.sql`), hardcoded to
+  `America/Los_Angeles`. This exists because bare `current_date` in
+  Postgres uses the database's session timezone (UTC on Supabase by
+  default), which would roll the code over at 5pm Pacific instead of local
+  midnight. If the club is ever in a different timezone, update the
+  timezone string in that function (via `create or replace function` in
+  the SQL Editor) — nothing else needs to change.
 
 ## Turning on real email delivery
 
